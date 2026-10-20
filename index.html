@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Bank Queue Management System</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+
+        header {
+            background: #0f172a;
+            color: white;
+            padding: 25px 20px;
+        }
+
+        header h1 {
+            margin: 0 0 8px;
+            font-size: 26px;
+        }
+
+        header p {
+            margin: 0;
+            color: #cbd5e1;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 0 18px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 18px;
+            margin-bottom: 24px;
+        }
+
+        .card {
+            background: white;
+            padding: 22px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .card h3 {
+            margin: 0 0 12px;
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .number {
+            font-size: 30px;
+            font-weight: bold;
+            color: #2563eb;
+        }
+
+        .panel {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        h2 {
+            margin-top: 0;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        input {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #cbd5e1;
+            border-radius: 7px;
+            font-size: 16px;
+            margin-bottom: 14px;
+        }
+
+        button {
+            padding: 12px 18px;
+            border: none;
+            border-radius: 7px;
+            background: #2563eb;
+            color: white;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .serve {
+            background: #15803d;
+        }
+
+        .clear {
+            background: #475569;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .customer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding: 15px;
+            margin-top: 12px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+        }
+
+        .customer:first-child {
+            border-left: 5px solid #16a34a;
+        }
+
+        .badge {
+            font-size: 12px;
+            background: #dcfce7;
+            color: #166534;
+            padding: 6px 9px;
+            border-radius: 20px;
+            white-space: nowrap;
+        }
+
+        #message {
+            margin-top: 15px;
+            font-weight: bold;
+            line-height: 1.5;
+        }
+
+        .empty {
+            color: #64748b;
+            padding: 20px 0;
+        }
+
+        footer {
+            text-align: center;
+            color: #64748b;
+            padding: 25px;
+            font-size: 13px;
+        }
+
+        @media (max-width: 480px) {
+            header h1 {
+                font-size: 22px;
+            }
+
+            .panel {
+                padding: 18px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Bank Queue Management System</h1>
+    <p>Customer Service Dashboard | First-In, First-Out (FIFO)</p>
+</header>
+
+<main class="container">
+
+    <section class="stats">
+        <div class="card">
+            <h3>Customers Waiting</h3>
+            <div class="number" id="waitingCount">0</div>
+        </div>
+
+        <div class="card">
+            <h3>Next Customer</h3>
+            <div class="number" id="nextCustomer"
+                 style="font-size: 22px;">None</div>
+        </div>
+
+        <div class="card">
+            <h3>Customers Served</h3>
+            <div class="number" id="servedCount">0</div>
+        </div>
+    </section>
+
+    <section class="panel">
+        <h2>Register a Customer</h2>
+        <p>Enter the customer's name to add them to the waiting queue.</p>
+
+        <form id="customerForm">
+            <label for="customerName">Customer Name</label>
+
+            <input
+                type="text"
+                id="customerName"
+                placeholder="e.g. Ama Mensah"
+                maxlength="60"
+                required
+            >
+
+            <button type="submit">+ Add Customer to Queue</button>
+        </form>
+
+        <div id="message" role="status" aria-live="polite"></div>
+    </section>
+
+    <section class="panel">
+        <h2>Customer Waiting Queue</h2>
+        <p>Customers are served in the order they arrive.</p>
+
+        <div id="queueList">
+            <p class="empty">No customers are currently waiting.</p>
+        </div>
+
+        <div class="actions">
+            <button class="serve" id="serveButton">
+                Serve Next Customer
+            </button>
+
+            <button class="clear" id="clearButton">
+                Clear Waiting Queue
+            </button>
+        </div>
+    </section>
+
+    <section class="panel">
+        <h2>How This System Uses a Queue</h2>
+
+        <p>
+            <strong>Enqueue:</strong>
+            Adds a customer to the rear of the queue.
+        </p>
+
+        <p>
+            <strong>Dequeue:</strong>
+            Removes the customer at the front when served.
+        </p>
+
+        <p>
+            <strong>FIFO:</strong>
+            First-In, First-Out means the first customer who joins
+            is the first customer served.
+        </p>
+    </section>
+
+</main>
+
+<footer>
+    Educational Project | Data Structures and Algorithms
+</footer>
+
+<script>
+    // Queue implementation using a JavaScript array.
+    const customerQueue = [];
+    let customersServed = 0;
+
+    const customerForm = document.getElementById("customerForm");
+    const customerName = document.getElementById("customerName");
+    const queueList = document.getElementById("queueList");
+    const message = document.getElementById("message");
+
+    function showMessage(text) {
+        message.textContent = text;
+    }
+
+    function updateDashboard() {
+        document.getElementById("waitingCount").textContent =
+            customerQueue.length;
+
+        document.getElementById("servedCount").textContent =
+            customersServed;
+
+        document.getElementById("nextCustomer").textContent =
+            customerQueue.length > 0
+                ? customerQueue[0]
+                : "None";
+
+        queueList.replaceChildren();
+
+        if (customerQueue.length === 0) {
+            const empty = document.createElement("p");
+            empty.className = "empty";
+            empty.textContent = "No customers are currently waiting.";
+            queueList.appendChild(empty);
+            return;
+        }
+
+        customerQueue.forEach((name, index) => {
+            const row = document.createElement("div");
+            row.className = "customer";
+
+            const details = document.createElement("span");
+            details.textContent =
+                (index + 1) + ". " + name;
+
+            const badge = document.createElement("span");
+            badge.className = "badge";
+            badge.textContent =
+                index === 0 ? "Next to be served" : "Waiting";
+
+            row.append(details, badge);
+            queueList.appendChild(row);
+        });
+    }
+
+    customerForm.addEventListener("submit", function(event) {
+        event.preventDefault();
+
+        const name = customerName.value.trim();
+
+        if (!name) {
+            showMessage("Please enter a customer's name.");
+            return;
+        }
+
+        // Enqueue: add the customer to the rear.
+        customerQueue.push(name);
+
+        showMessage(name + " has joined the queue successfully.");
+
+        customerForm.reset();
+        customerName.focus();
+
+        updateDashboard();
+    });
+
+    document.getElementById("serveButton")
+        .addEventListener("click", function() {
+
+            if (customerQueue.length === 0) {
+                showMessage("There are no customers waiting to be served.");
+                return;
+            }
+
+            // Dequeue: remove the customer at the front.
+            const servedCustomer = customerQueue.shift();
+
+            customersServed++;
+
+            showMessage(servedCustomer + " has been served successfully.");
+
+            updateDashboard();
+        });
+
+    document.getElementById("clearButton")
+        .addEventListener("click", function() {
+
+            if (customerQueue.length === 0) {
+                showMessage("The waiting queue is already empty.");
+                return;
+            }
+
+            const confirmed = confirm(
+                "Are you sure you want to remove all waiting customers?"
+            );
+
+            if (!confirmed) {
+                return;
+            }
+
+            customerQueue.length = 0;
+
+            showMessage("The waiting queue has been cleared.");
+
+            updateDashboard();
+        });
+
+    updateDashboard();
+</script>
+
+</body>
+</html>
